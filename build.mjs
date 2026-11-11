@@ -21,17 +21,15 @@ const email = /^[^\s@?&#]+@[^\s@?&#]+\.[^\s@?&#]+$/.test(config.formEmail) ? con
 const button = (label, url, style = '') => url
   ? `<a class="button ${style}" href="${escape(url)}">${escape(label)}</a>`
   : `<span class="button ${style}" aria-disabled="true" title="संपर्क विवरण जोड़ा जाना बाकी है">${escape(label)}</span>`;
-const sources = path => [480, 800, 1200].map(width => {
-  const file = width === 1200 ? path : path.replace(/\.webp$/, '-' + width + '.webp');
+const sources = (path, originalWidth = 1200) => [480, 800, originalWidth].map(width => {
+  const file = width === originalWidth ? path : path.replace(/\.webp$/, '-' + width + '.webp');
   return asset(file) ? file + ' ' + width + 'w' : '';
 }).filter(Boolean).join(', ');
 const heroSizes = '(min-width: 700px) 334px, (min-width: 344px) 274px, calc(100vw - 70px)';
-const gallerySizes = '(min-width: 1176px) 365px, (min-width: 700px) 32vw, 48vw';
-const leadGallerySizes = '(min-width: 1176px) 742px, (min-width: 700px) 64vw, calc(100vw - 32px)';
-const middleGallerySizes = '(min-width: 1176px) 742px, (min-width: 700px) 64vw, 48vw';
+const gallerySizes = '(min-width: 1176px) 271px, (min-width: 900px) calc((100vw - 95px) / 4), (min-width: 700px) calc((100vw - 69px) / 2), calc((100vw - 42px) / 2)';
 const photo = (path, alt, label, {width, height, sizes, eager = false, badge, caption} = {}) => {
   if (!asset(path)) return `<div class="placeholder">${escape(label)}</div>`;
-  const srcset = sizes && sources(path);
+  const srcset = sizes && sources(path, width);
   return `<figure class="media"><img src="${escape(path)}" alt="${escape(alt)}" width="${width}" height="${height}" decoding="async"
   ${eager ? 'fetchpriority="high"' : 'loading="lazy"'}${srcset ? ` srcset="${escape(srcset)}" sizes="${escape(sizes)}"` : ''}>
   ${badge ? `<span class="media-label">${escape(badge)}</span>` : ''}
@@ -91,10 +89,9 @@ const issues = config.issues.length
 const facts = grid(config.facts.map(item => `<article class="panel"><h3>${escape(item.label)}</h3>
 <strong class="fact-value">${item.value && webUrl(item.source) ? escape(item.value) : '—'}</strong>
 ${item.value && webUrl(item.source) ? `<a href="${escape(item.source)}">सत्यापन स्रोत</a>` : '<p class="hint">सत्यापित आँकड़ा बाकी है</p>'}</article>`));
-const gallery = items => `<div class="masonry">${items.map((item, index) => `<div class="gallery-item">
+const gallery = items => `<div class="gallery-grid">${items.map(item => `<div class="gallery-item">
 ${photo(item.file, item.alt, item.caption + ' का चित्र जोड़ा जाना बाकी है।',
-    {width:1200, height:800, sizes:[0, 5].includes(index) ? leadGallerySizes : index === 3 ? middleGallerySizes : gallerySizes,
-      badge:config.illustrationLabel, caption:item.caption})}</div>`).join('')}</div>`;
+    {width:960, height:960, sizes:gallerySizes, caption:item.caption})}</div>`).join('')}</div>`;
 const posts = limit => {
   const entries = [...config.updates].sort((a, b) => String(b.date).localeCompare(String(a.date)));
   const placeholders = Array.from({length: limit || 1}, () =>
@@ -130,7 +127,7 @@ const home = hero
   + section('विकास की रूपरेखा', timeline)
   + section('अमरगढ़ की ज़रूरतें', issues)
   + section('आँकड़े', facts, 'facts')
-  + section('गैलरी', gallery(config.gallery.slice(0, 6)) + '<div class="actions">' + button('सभी फोटो देखें', 'gallery.html', 'light') + '</div>')
+  + section('गैलरी', gallery(config.gallery) + '<div class="actions">' + button('सभी फोटो देखें', 'gallery.html', 'light') + '</div>')
   + section('ताज़ा अपडेट', posts(3))
   + section('आपकी राय', '<h3>आपके गाँव की सबसे बड़ी समस्या क्या है?</h3>' + form('गाँव के लिए सुझाव', true))
   + appeal;

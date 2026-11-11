@@ -94,12 +94,10 @@ nav a[aria-current], nav a:hover { background: #f8ecd8; color: var(--red); borde
 .facts .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .facts a { display: inline-flex; align-items: center; min-height: 44px; }
 .fact-value { display: block; color: var(--green); font-size: 2rem; font-weight: 800; }
-.masonry { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.gallery-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .gallery-item { min-width: 0; }
-.gallery-item:is(:first-child, :nth-child(6)) { grid-column: span 2; }
-.gallery-item .media { height: 100%; min-height: 122px; overflow: hidden; border-radius: var(--radius); background: var(--navy); }
-.gallery-item img { height: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
-.gallery-item:is(:first-child, :nth-child(6)) img { aspect-ratio: 2 / 1; }
+.gallery-item .media { overflow: hidden; border-radius: var(--radius); background: var(--navy); }
+.gallery-item img { aspect-ratio: 1; object-fit: cover; }
 .gallery-item figcaption { position: absolute; inset: auto 0 0; padding: 20px 8px 6px; color: white; background: linear-gradient(transparent, #101d33f2); font-size: .86rem; font-weight: 750; }
 .gallery-item .placeholder { min-height: 115px; }
 
@@ -136,11 +134,11 @@ nav a[aria-current], nav a:hover { background: #f8ecd8; color: var(--red); borde
   .intro-pair .reel { width: min(100%, 236px); }
   .intro-pair .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .panel, .form { padding: 20px; }
-  .masonry { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
-  .gallery-item:nth-child(4) { grid-column: span 2; }
-  .gallery-item:nth-child(4) img { aspect-ratio: 2 / 1; }
-  .gallery-item:is(:nth-child(2), :nth-child(3), :nth-child(5)) img { aspect-ratio: auto; }
+  .gallery-grid { gap: 13px; }
   .footer dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) {
+  .gallery-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (min-width: 1000px) {
   .header-inner { justify-content: space-between; }
