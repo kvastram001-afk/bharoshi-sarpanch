@@ -21,9 +21,22 @@ const email = /^[^\s@?&#]+@[^\s@?&#]+\.[^\s@?&#]+$/.test(config.formEmail) ? con
 const button = (label, url, style = '') => url
   ? `<a class="button ${style}" href="${escape(url)}">${escape(label)}</a>`
   : `<span class="button ${style}" aria-disabled="true" title="संपर्क विवरण जोड़ा जाना बाकी है">${escape(label)}</span>`;
-const photo = (path, alt, label, lazy = true) => asset(path)
-  ? `<img src="${escape(path)}" alt="${escape(alt)}" ${lazy ? 'loading="lazy" decoding="async"' : 'fetchpriority="high"'}>`
-  : `<div class="placeholder">${escape(label)}</div>`;
+const sources = path => [480, 800, 1200].map(width => {
+  const file = width === 1200 ? path : path.replace(/\.webp$/, '-' + width + '.webp');
+  return asset(file) ? file + ' ' + width + 'w' : '';
+}).filter(Boolean).join(', ');
+const heroSizes = '(min-width: 700px) 430px, calc(100vw - 32px)';
+const gallerySizes = '(min-width: 1176px) 365px, (min-width: 700px) 32vw, 48vw';
+const photo = (path, alt, label, {width, height, sizes, eager = false, badge, caption} = {}) => {
+  if (!asset(path)) return `<div class="placeholder">${escape(label)}</div>`;
+  const srcset = sizes && sources(path);
+  return `<figure class="media"><img src="${escape(path)}" alt="${escape(alt)}" width="${width}" height="${height}" decoding="async"
+  ${eager ? 'fetchpriority="high"' : 'loading="lazy"'}${srcset ? ` srcset="${escape(srcset)}" sizes="${escape(sizes)}"` : ''}>
+  ${badge ? `<span class="media-label">${escape(badge)}</span>` : ''}
+  ${caption ? `<figcaption>${escape(caption)}</figcaption>` : ''}</figure>`;
+};
+const bioPhoto = photo(config.bioPhoto, config.bioPhotoAlt, 'परिचय की तस्वीर जोड़ी जानी बाकी है।',
+  {width:900, height:900, badge:config.portraitLabel});
 const section = (title, inner, extra = '') =>
   `<section class="section ${extra}"><div class="wrap"><h2>${escape(title)}</h2>${inner}</div></section>`;
 const divider = '<div class="safa" aria-hidden="true"></div>';
@@ -46,13 +59,14 @@ ${details}${social.length ? '<div class="actions">' + social.join('') + '</div>'
 <aside class="sticky" aria-label="त्वरित संपर्क">${button('व्हाट्सऐप पर जुड़ें', waUrl)}${button('कॉल करें', callUrl, 'gold')}</aside>`;
 const appeal = `<section class="appeal"><div class="wrap"><h2>${escape(config.appeal)}</h2><p>${escape(config.closing)}</p></div></section>`;
 
-const video = `<span class="badge">एआई से निर्मित</span>` + (asset(config.reel.file) && asset(config.reel.captions)
-  ? `<video controls playsinline preload="none"${asset(config.reel.poster) ? ' poster="' + escape(config.reel.poster) + '"' : ''} aria-label="तीस सेकंड की मतदान अपील">
-<source src="${escape(config.reel.file)}"><track kind="captions" srclang="hi" label="हिंदी" src="${escape(config.reel.captions)}" default></video>`
-  : '<div class="placeholder video-slot">३० सेकंड का वीडियो और हिंदी उपशीर्षक जोड़े जाने बाकी हैं।</div>')
+const video = `<span class="badge">${escape(config.videoLabel)}</span>` + (asset(config.reel.file)
+  ? `<video class="reel" width="1080" height="1920" controls playsinline preload="none"${asset(config.reel.poster) ? ' poster="' + escape(config.reel.poster) + '"' : ''} aria-label="तीस सेकंड की मतदान अपील">
+<source src="${escape(config.reel.file)}" type="video/mp4">${asset(config.reel.captions) ? `<track kind="captions" srclang="hi" label="हिंदी" src="${escape(config.reel.captions)}" default>` : ''}</video>`
+  : `<div class="reel">${photo(config.reel.poster, config.reel.posterAlt, '३० सेकंड का वीडियो और हिंदी उपशीर्षक जोड़े जाने बाकी हैं।',
+      {width:1080, height:1920, badge:config.portraitLabel})}</div>`)
   + (config.reel.transcript ? `<details><summary>वीडियो का लिखित पाठ</summary><p>${escape(config.reel.transcript)}</p></details>` : '');
 const bio = grid([
-  `<div>${photo(config.bioPhoto || config.portrait, config.name + ' की तस्वीर', 'परिचय की तस्वीर जोड़ी जानी बाकी है।')}</div>`,
+  `<div>${bioPhoto}</div>`,
   `<div class="panel"><p>${escape(config.bio || 'उम्मीदवार का संक्षिप्त परिचय जोड़ा जाना बाकी है।')}</p><div class="actions">${button('पूरा परिचय पढ़ें', 'about.html', 'light')}</div></div>`
 ]);
 const icons = [
@@ -63,7 +77,7 @@ const icons = [
   'M3 21h18M5 21V10l7-6 7 6v11m-10 0v-7h6v7'
 ];
 const pledges = grid(config.pledges.map((item, index) =>
-  `<article class="panel"><div class="pledge-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="${icons[index % icons.length]}"/></svg></div><h3>${escape(item)}</h3></article>`), 'sm:grid-cols-2 lg:grid-cols-3');
+  `<article class="panel"><div class="pledge-icon" aria-hidden="true"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="${icons[index % icons.length]}"/></svg></div><h3>${escape(item)}</h3></article>`), 'sm:grid-cols-2 lg:grid-cols-3');
 const timeline = `<ol class="timeline">${config.timeline.map(item =>
   `<li class="panel"><h3>${escape(item.label)}</h3><p class="muted">${escape(item.detail || 'मसौदा · इस चरण की योजना जोड़ी जानी बाकी है।')}</p></li>`).join('')}</ol>`;
 const issues = config.issues.length
@@ -72,9 +86,9 @@ const issues = config.issues.length
 const facts = grid(config.facts.map(item => `<article class="panel"><h3>${escape(item.label)}</h3>
 <strong class="fact-value">${item.value && webUrl(item.source) ? escape(item.value) : '—'}</strong>
 ${item.value && webUrl(item.source) ? `<a href="${escape(item.source)}">सत्यापन स्रोत</a>` : '<p class="hint">सत्यापित आँकड़ा बाकी है</p>'}</article>`));
-const gallery = items => `<div class="masonry">${items.map(item => `<figure>
-${photo(item.file, item.alt, item.alt + ' जोड़ी जानी बाकी है।')}
-${asset(item.file) ? `<figcaption>${escape(item.alt)}</figcaption>` : ''}</figure>`).join('')}</div>`;
+const gallery = items => `<div class="masonry">${items.map(item => `<div class="gallery-item">
+${photo(item.file, item.alt, item.caption + ' का चित्र जोड़ा जाना बाकी है।',
+    {width:1200, height:800, sizes:gallerySizes, badge:config.illustrationLabel, caption:item.caption})}</div>`).join('')}</div>`;
 const posts = limit => {
   const entries = [...config.updates].sort((a, b) => String(b.date).localeCompare(String(a.date)));
   const placeholders = Array.from({length: limit || 1}, () =>
@@ -100,7 +114,8 @@ const hero = `<section class="hero"><div class="wrap hero-grid">
 <div><p class="eyebrow">${escape(config.place)}</p><h1>${escape(config.name)}</h1><p class="role">${escape(config.office)}</p>
 <p class="tagline">${escape(config.tagline)}</p><p>${escape(config.subtitle)}</p>
 <div class="actions">${button('मेरा संकल्प देखें', 'vision.html', 'gold')}${button('व्हाट्सऐप पर जुड़ें', waUrl, 'light')}</div></div>
-<figure class="portrait">${photo(config.portrait, 'नमस्ते करते हुए ' + config.name, 'नमस्ते करते हुए उम्मीदवार की तस्वीर यहाँ जोड़ी जाएगी।', false)}</figure></div></section>`;
+<div class="portrait">${photo(config.portrait, config.portraitAlt, 'नमस्ते करते हुए उम्मीदवार की तस्वीर यहाँ जोड़ी जाएगी।',
+  {width:1200, height:1500, sizes:heroSizes, eager:true, badge:config.portraitLabel})}</div></div></section>`;
 const home = hero
   + section('परिचय वीडियो', video)
   + section('संक्षिप्त परिचय', bio)
@@ -116,7 +131,7 @@ const home = hero
 const bodies = {
   index: home,
   about: section('उम्मीदवार के बारे में', grid([
-    photo(config.bioPhoto || config.portrait, config.name + ' की तस्वीर', 'उम्मीदवार की तस्वीर जोड़ी जानी बाकी है।'),
+    bioPhoto,
     `<div class="panel"><h2>${escape(config.name)}</h2><p>${escape(config.office)}</p><p>${escape(config.bio || pending)}</p></div>`
   ])),
   vision: section('ग्राम पंचायत के लिए पाँच संकल्प', pledges) + section('विकास का संकल्प', `<p>${escape(config.subtitle)}</p>`),
@@ -134,22 +149,26 @@ const bodies = {
 mkdirSync('dist', {recursive: true});
 cpSync('assets', 'dist/assets', {recursive: true});
 cpSync('src/site.js', 'dist/site.js');
-cpSync('src/favicon.svg', 'dist/favicon.svg');
 
 for (const [slug, label] of pages) {
   const title = slug === 'index' ? config.name + ' | सरपंच पद हेतु, अमरगढ़' : label + ' | ' + config.name;
-  const description = label + ' — ' + config.name + ', सरपंच पद हेतु, ' + config.place + '।';
+  const description = config.metaDescriptions[slug];
   const url = base && base + '/' + (slug === 'index' ? '' : slug + '.html');
   const share = base && asset(config.shareImage) && base + '/' + config.shareImage;
+  const heroSrcset = slug === 'index' && asset(config.portrait) && sources(config.portrait);
   writeFileSync('dist/' + slug + '.html', `<!doctype html>
 <html lang="hi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${escape(title)}</title><meta name="description" content="${escape(description)}">
+${config.noindex ? '<meta name="robots" content="noindex, nofollow">' : ''}
 <meta property="og:type" content="website"><meta property="og:locale" content="hi_IN">
 <meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}">
 ${url ? `<link rel="canonical" href="${escape(url)}"><meta property="og:url" content="${escape(url)}">` : ''}
-${share ? `<meta property="og:image" content="${escape(share)}"><meta property="og:image:alt" content="${escape(config.name)}">` : ''}
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
+${share ? `<meta property="og:image" content="${escape(share)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="${escape(config.name)}">` : ''}
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+${heroSrcset ? `<link rel="preload" as="image" href="${escape(config.portrait)}" imagesrcset="${escape(heroSrcset)}" imagesizes="${heroSizes}">` : ''}
 <link rel="stylesheet" href="site.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800&amp;display=swap">
 <script src="site.js" defer></script></head>
