@@ -1,0 +1,7 @@
+{
+  "name": "amargarh-candidate-site",
+  "private": true,
+  "type": "module",
+  "scripts": {"build":"node build.mjs","check":"node check.mjs"},
+  "devDependencies": {"tailwindcss":"3.4.19"}
+}
