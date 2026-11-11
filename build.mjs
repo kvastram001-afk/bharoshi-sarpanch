@@ -25,8 +25,10 @@ const sources = path => [480, 800, 1200].map(width => {
   const file = width === 1200 ? path : path.replace(/\.webp$/, '-' + width + '.webp');
   return asset(file) ? file + ' ' + width + 'w' : '';
 }).filter(Boolean).join(', ');
-const heroSizes = '(min-width: 700px) 430px, calc(100vw - 32px)';
+const heroSizes = '(min-width: 700px) 334px, (min-width: 344px) 274px, calc(100vw - 70px)';
 const gallerySizes = '(min-width: 1176px) 365px, (min-width: 700px) 32vw, 48vw';
+const leadGallerySizes = '(min-width: 1176px) 742px, (min-width: 700px) 64vw, calc(100vw - 32px)';
+const middleGallerySizes = '(min-width: 1176px) 742px, (min-width: 700px) 64vw, 48vw';
 const photo = (path, alt, label, {width, height, sizes, eager = false, badge, caption} = {}) => {
   if (!asset(path)) return `<div class="placeholder">${escape(label)}</div>`;
   const srcset = sizes && sources(path);
@@ -45,10 +47,13 @@ const panel = (title, detail) => `<article class="panel"><h3>${escape(title)}</h
 const heading = title => `<div class="page-heading"><div class="wrap"><p class="eyebrow">${escape(config.place)}</p><h1>${escape(title)}</h1></div></div>`;
 const links = current => pages.map(([slug, title]) =>
   `<a href="${slug}.html"${slug === current ? ' aria-current="page"' : ''}>${title}</a>`).join('');
-const header = current => `<a class="skip button" href="#main">मुख्य सामग्री पर जाएँ</a><div class="strip">${escape(config.strip)}</div>
-<header class="header"><div class="wrap header-inner"><a class="brand" href="index.html">${escape(config.name)}</a>
+const header = current => `<a class="skip button" href="#main">मुख्य सामग्री पर जाएँ</a>
+<header class="header"><div class="wrap header-inner">
+<details class="menu"><summary aria-label="मुख्य सूची"><svg aria-hidden="true" viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></summary><nav aria-label="मुख्य नेविगेशन">${links(current)}</nav></details>
+<a class="brand" href="index.html"><span>${escape(config.name)}</span><small>${escape(config.place)}</small></a>
 <nav class="desktop-nav" aria-label="मुख्य नेविगेशन">${links(current)}</nav>
-<details class="menu"><summary><span aria-hidden="true">☰</span> मेनू</summary><nav aria-label="मुख्य नेविगेशन">${links(current)}</nav></details></div></header>`;
+</div></header>
+<div class="strip"><span aria-hidden="true">✦</span> ${escape(config.strip)} <span aria-hidden="true">✦</span></div>`;
 const details = `<dl><div><dt>चुनाव चिह्न</dt><dd>${escape(config.symbol || 'पुष्टि बाकी है')}</dd></div>
 <div><dt>मतदान की तारीख</dt><dd>${escape(config.pollingDate || 'पुष्टि बाकी है')}</dd></div>
 <div><dt>फ़ोन / व्हाट्सऐप</dt><dd>${escape([callUrl && config.phone, waUrl && config.whatsapp].filter(Boolean).join(' / ') || 'विवरण जोड़ा जाना बाकी है')}</dd></div></dl>`;
@@ -77,7 +82,7 @@ const icons = [
   'M3 21h18M5 21V10l7-6 7 6v11m-10 0v-7h6v7'
 ];
 const pledges = grid(config.pledges.map((item, index) =>
-  `<article class="panel"><div class="pledge-icon" aria-hidden="true"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="${icons[index % icons.length]}"/></svg></div><h3>${escape(item)}</h3></article>`), 'sm:grid-cols-2 lg:grid-cols-3');
+  `<article class="panel pledge"><div class="pledge-icon" aria-hidden="true"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="${icons[index % icons.length]}"/></svg></div><h3>${escape(item)}</h3></article>`), 'sm:grid-cols-2 lg:grid-cols-3');
 const timeline = `<ol class="timeline">${config.timeline.map(item =>
   `<li class="panel"><h3>${escape(item.label)}</h3><p class="muted">${escape(item.detail || 'मसौदा · इस चरण की योजना जोड़ी जानी बाकी है।')}</p></li>`).join('')}</ol>`;
 const issues = config.issues.length
@@ -86,9 +91,10 @@ const issues = config.issues.length
 const facts = grid(config.facts.map(item => `<article class="panel"><h3>${escape(item.label)}</h3>
 <strong class="fact-value">${item.value && webUrl(item.source) ? escape(item.value) : '—'}</strong>
 ${item.value && webUrl(item.source) ? `<a href="${escape(item.source)}">सत्यापन स्रोत</a>` : '<p class="hint">सत्यापित आँकड़ा बाकी है</p>'}</article>`));
-const gallery = items => `<div class="masonry">${items.map(item => `<div class="gallery-item">
+const gallery = items => `<div class="masonry">${items.map((item, index) => `<div class="gallery-item">
 ${photo(item.file, item.alt, item.caption + ' का चित्र जोड़ा जाना बाकी है।',
-    {width:1200, height:800, sizes:gallerySizes, badge:config.illustrationLabel, caption:item.caption})}</div>`).join('')}</div>`;
+    {width:1200, height:800, sizes:[0, 5].includes(index) ? leadGallerySizes : index === 3 ? middleGallerySizes : gallerySizes,
+      badge:config.illustrationLabel, caption:item.caption})}</div>`).join('')}</div>`;
 const posts = limit => {
   const entries = [...config.updates].sort((a, b) => String(b.date).localeCompare(String(a.date)));
   const placeholders = Array.from({length: limit || 1}, () =>
@@ -110,15 +116,16 @@ ${wardHint ? '<p id="ward-hint" class="hint">अगर चाहें, सं�
 ${active ? '' : '<p class="hint">संदेश भेजने का संपर्क जोड़ा जाना बाकी है।</p>'}
 <button class="button" type="submit" disabled>संदेश तैयार करें</button><p role="status"></p></form>`;
 };
-const hero = `<section class="hero"><div class="wrap hero-grid">
-<div><p class="eyebrow">${escape(config.place)}</p><h1>${escape(config.name)}</h1><p class="role">${escape(config.office)}</p>
-<p class="tagline">${escape(config.tagline)}</p><p>${escape(config.subtitle)}</p>
-<div class="actions">${button('मेरा संकल्प देखें', 'vision.html', 'gold')}${button('व्हाट्सऐप पर जुड़ें', waUrl, 'light')}</div></div>
+const hero = `<section class="hero wrap"><div class="hero-grid">
+<div class="hero-copy"><p class="eyebrow">${escape(config.place)}</p><h1>${escape(config.name)}</h1><p class="role">${escape(config.office)}</p>
+<p class="tagline">${escape(config.tagline)}</p><p class="hero-subtitle">${escape(config.subtitle)}</p></div>
 <div class="portrait">${photo(config.portrait, config.portraitAlt, 'नमस्ते करते हुए उम्मीदवार की तस्वीर यहाँ जोड़ी जाएगी।',
-  {width:1200, height:1500, sizes:heroSizes, eager:true, badge:config.portraitLabel})}</div></div></section>`;
+  {width:1200, height:1500, sizes:heroSizes, eager:true, badge:config.portraitLabel})}</div>
+<div class="actions hero-actions">${button('मेरा संकल्प देखें', 'vision.html', 'gold')}${button('व्हाट्सऐप पर जुड़ें', waUrl)}</div>
+</div></section>`;
 const home = hero
-  + section('परिचय वीडियो', video)
-  + section('संक्षिप्त परिचय', bio)
+  + '<div class="intro-pair">' + section('परिचय वीडियो', video)
+  + section('संक्षिप्त परिचय', bio) + '</div>'
   + divider + section('मेरा संकल्प', pledges)
   + section('विकास की रूपरेखा', timeline)
   + section('अमरगढ़ की ज़रूरतें', issues)

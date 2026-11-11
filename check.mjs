@@ -19,7 +19,8 @@ for (const file of pages) {
 
 const home = readFileSync('dist/index.html', 'utf8');
 const sections = ['परिचय वीडियो','संक्षिप्त परिचय','मेरा संकल्प','विकास की रूपरेखा','अमरगढ़ की ज़रूरतें','आँकड़े','गैलरी','ताज़ा अपडेट','आपकी राय'];
-let last = home.indexOf('<section class="hero"');
+let last = home.indexOf('<section class="hero wrap"');
+assert.ok(last >= 0);
 for (const title of sections) {
   const next = home.indexOf('<h2>' + title + '</h2>');
   assert.ok(next > last, title);
