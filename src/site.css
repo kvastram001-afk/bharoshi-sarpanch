@@ -66,12 +66,10 @@ nav a[aria-current], nav a:hover { background: #f8ecd8; color: var(--red); borde
 .portrait { width: min(100%, 280px); padding: 3px; border-radius: 16px; background: linear-gradient(150deg, #ffe3a2, #ac6228 58%, #efb65a); box-shadow: 0 9px 24px #23040b59; }
 .portrait img { aspect-ratio: 4 / 5; object-fit: cover; }
 .media { position: relative; }
-.media-label { position: absolute; top: 7px; right: 7px; max-width: calc(100% - 14px); padding: 3px 7px; border-radius: 99px; background: #101d33eb; color: #fff; font-size: .68rem; line-height: 1.35; }
 .placeholder { display: grid; place-items: center; min-height: 90px; padding: 15px; border: 1px dashed #aa987a; border-radius: var(--radius); background: #f5ead2; color: #4b4439; text-align: center; }
 .portrait .placeholder { min-height: 210px; aspect-ratio: 4 / 5; }
 .reel { width: min(100%, 300px); }
 .reel .placeholder { min-height: 150px; }
-.badge { display: inline-flex; margin-bottom: 10px; padding: 3px 10px; border-radius: 99px; background: #f8e6ad; color: #473512; font-size: .81rem; font-weight: 700; }
 
 .section { padding-block: 25px; border-bottom: 1px solid var(--line); }
 .section > .wrap > h2 { display: flex; align-items: center; gap: 10px; color: var(--red); }
@@ -100,6 +98,16 @@ nav a[aria-current], nav a:hover { background: #f8ecd8; color: var(--red); borde
 .gallery-item img { aspect-ratio: 1; object-fit: cover; }
 .gallery-item figcaption { position: absolute; inset: auto 0 0; padding: 20px 8px 6px; color: white; background: linear-gradient(transparent, #101d33f2); font-size: .86rem; font-weight: 750; }
 .gallery-item .placeholder { min-height: 115px; }
+.carousel-track { position: relative; display: flex; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.carousel-track::-webkit-scrollbar { display: none; }
+.carousel-track > * { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
+.gallery-carousel .carousel-track { gap: 10px; }
+.gallery-carousel .carousel-track > * { flex-basis: 76%; }
+.hero-carousel .carousel-track { border-radius: 12px; }
+.carousel-controls:not([hidden]) { display: flex; justify-content: center; gap: 8px; padding: 6px; }
+.carousel-controls button { min-width: 44px; min-height: 44px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); color: var(--red); cursor: pointer; font-weight: 700; }
+.carousel-controls [data-step] { font-size: 1.45rem; line-height: 1; }
+.hero-carousel .carousel-controls button { background: #fff4d6; }
 
 .form { display: grid; gap: 11px; max-width: 640px; margin-top: 12px; padding: 15px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); }
 .form label { font-weight: 700; }
@@ -117,7 +125,7 @@ nav a[aria-current], nav a:hover { background: #f8ecd8; color: var(--red); borde
 .footer dl { display: grid; gap: 8px; margin: 12px 0; }
 .footer dt { font-weight: 750; }
 .footer dd { margin: 0; }
-.footer .hint, .footer .ai { color: #e6d9c5; font-size: .88rem; }
+.footer .hint { color: #e6d9c5; font-size: .88rem; }
 .sticky { position: fixed; z-index: 8; inset: auto 0 0; display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; padding: 8px max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); border-top: 1px solid var(--line); background: var(--paper); box-shadow: 0 -6px 20px #19294110; }
 
 @media (min-width: 700px) {
@@ -135,10 +143,12 @@ nav a[aria-current], nav a:hover { background: #f8ecd8; color: var(--red); borde
   .intro-pair .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .panel, .form { padding: 20px; }
   .gallery-grid { gap: 13px; }
+  .gallery-carousel .carousel-track > * { flex-basis: calc((100% - 20px) / 3); }
   .footer dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 900px) {
   .gallery-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .gallery-carousel .carousel-track > * { flex-basis: calc((100% - 30px) / 4); }
 }
 @media (min-width: 1000px) {
   .header-inner { justify-content: space-between; }

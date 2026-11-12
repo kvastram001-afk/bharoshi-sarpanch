@@ -9,7 +9,7 @@ for (const file of pages) {
   assert.match(html, /<html lang="hi">/);
   assert.match(html, /<meta property="og:title"/);
   assert.equal((html.match(/aria-current="page"/g) || []).length, 2);
-  assert.match(html, /कुछ चित्र\/वीडियो AI की सहायता से बनाए गए हैं/);
+  assert.doesNotMatch(html, /AI द्वारा निर्मित|AI से निर्मित|AI की सहायता से/);
   assert.equal((html.match(/<h1>/g) || []).length, 1);
   for (const [, link] of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
     if (link.startsWith('#')) assert.ok(html.includes('id="' + link.slice(1) + '"'), file + ': ' + link);
@@ -18,6 +18,10 @@ for (const file of pages) {
 }
 
 const home = readFileSync('dist/index.html', 'utf8');
+assert.equal((home.match(/data-carousel>/g) || []).length, 2);
+assert.match(home, /src="assets\/img\/hero-banner\.webp"/);
+assert.equal((home.match(/src="assets\/img\/gallery-photo-\d+\.webp"/g) || []).length, 8);
+assert.match(home, /href="https:\/\/wa\.me\/919982444984"/);
 const sections = ['परिचय वीडियो','संक्षिप्त परिचय','मेरा संकल्प','विकास की रूपरेखा','अमरगढ़ की ज़रूरतें','आँकड़े','गैलरी','ताज़ा अपडेट','आपकी राय'];
 let last = home.indexOf('<section class="hero wrap"');
 assert.ok(last >= 0);

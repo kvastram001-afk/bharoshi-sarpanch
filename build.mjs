@@ -27,16 +27,16 @@ const sources = (path, originalWidth = 1200) => [480, 800, originalWidth].map(wi
 }).filter(Boolean).join(', ');
 const heroSizes = '(min-width: 700px) 334px, (min-width: 344px) 274px, calc(100vw - 70px)';
 const gallerySizes = '(min-width: 1176px) 271px, (min-width: 900px) calc((100vw - 95px) / 4), (min-width: 700px) calc((100vw - 69px) / 2), calc((100vw - 42px) / 2)';
-const photo = (path, alt, label, {width, height, sizes, eager = false, badge, caption} = {}) => {
+const gallerySliderSizes = '(min-width: 1176px) 271px, (min-width: 900px) 25vw, (min-width: 700px) 33vw, 76vw';
+const photo = (path, alt, label, {width, height, sizes, eager = false, caption} = {}) => {
   if (!asset(path)) return `<div class="placeholder">${escape(label)}</div>`;
   const srcset = sizes && sources(path, width);
   return `<figure class="media"><img src="${escape(path)}" alt="${escape(alt)}" width="${width}" height="${height}" decoding="async"
   ${eager ? 'fetchpriority="high"' : 'loading="lazy"'}${srcset ? ` srcset="${escape(srcset)}" sizes="${escape(sizes)}"` : ''}>
-  ${badge ? `<span class="media-label">${escape(badge)}</span>` : ''}
   ${caption ? `<figcaption>${escape(caption)}</figcaption>` : ''}</figure>`;
 };
 const bioPhoto = photo(config.bioPhoto, config.bioPhotoAlt, 'परिचय की तस्वीर जोड़ी जानी बाकी है।',
-  {width:900, height:900, badge:config.portraitLabel});
+  {width:900, height:900});
 const section = (title, inner, extra = '') =>
   `<section class="section ${extra}"><div class="wrap"><h2>${escape(title)}</h2>${inner}</div></section>`;
 const divider = '<div class="safa" aria-hidden="true"></div>';
@@ -58,15 +58,15 @@ const details = `<dl><div><dt>चुनाव चिह्न</dt><dd>${escape(c
 const social = config.social.filter(item => webUrl(item.url)).map(item => button(item.label, item.url, 'light'));
 const footer = `<footer class="footer"><div class="wrap"><strong>${escape(config.name)}</strong> · ${escape(config.place)}
 ${details}${social.length ? '<div class="actions">' + social.join('') + '</div>' : '<p class="hint">सोशल मीडिया लिंक जोड़े जाने बाकी हैं।</p>'}
-<p class="ai">इस वेबसाइट के कुछ चित्र/वीडियो AI की सहायता से बनाए गए हैं।</p></div></footer>
+</div></footer>
 <aside class="sticky" aria-label="त्वरित संपर्क">${button('व्हाट्सऐप पर जुड़ें', waUrl)}${button('कॉल करें', callUrl, 'gold')}</aside>`;
 const appeal = `<section class="appeal"><div class="wrap"><h2>${escape(config.appeal)}</h2><p>${escape(config.closing)}</p></div></section>`;
 
-const video = `<span class="badge">${escape(config.videoLabel)}</span>` + (asset(config.reel.file)
+const video = (asset(config.reel.file)
   ? `<video class="reel" width="1080" height="1920" controls playsinline preload="none"${asset(config.reel.poster) ? ' poster="' + escape(config.reel.poster) + '"' : ''} aria-label="तीस सेकंड की मतदान अपील">
 <source src="${escape(config.reel.file)}" type="video/mp4">${asset(config.reel.captions) ? `<track kind="captions" srclang="hi" label="हिंदी" src="${escape(config.reel.captions)}" default>` : ''}</video>`
   : `<div class="reel">${photo(config.reel.poster, config.reel.posterAlt, '३० सेकंड का वीडियो और हिंदी उपशीर्षक जोड़े जाने बाकी हैं।',
-      {width:1080, height:1920, badge:config.portraitLabel})}</div>`)
+      {width:1080, height:1920})}</div>`)
   + (config.reel.transcript ? `<details><summary>वीडियो का लिखित पाठ</summary><p>${escape(config.reel.transcript)}</p></details>` : '');
 const bio = grid([
   `<div>${bioPhoto}</div>`,
@@ -89,9 +89,19 @@ const issues = config.issues.length
 const facts = grid(config.facts.map(item => `<article class="panel"><h3>${escape(item.label)}</h3>
 <strong class="fact-value">${item.value && webUrl(item.source) ? escape(item.value) : '—'}</strong>
 ${item.value && webUrl(item.source) ? `<a href="${escape(item.source)}">सत्यापन स्रोत</a>` : '<p class="hint">सत्यापित आँकड़ा बाकी है</p>'}</article>`));
-const gallery = items => `<div class="gallery-grid">${items.map(item => `<div class="gallery-item">
+const carousel = (label, slides, variant) => `<div class="carousel ${variant}" role="region" aria-label="${label}" data-carousel>
+<div class="carousel-track" tabindex="0" aria-label="${label} की स्लाइड">${slides}</div>
+<div class="carousel-controls" hidden>
+<button type="button" data-step="-1" aria-label="पिछली स्लाइड">‹</button>
+<button type="button" data-pause>रोकें</button>
+<button type="button" data-step="1" aria-label="अगली स्लाइड">›</button>
+</div></div>`;
+const gallery = (items, slider = false) => {
+  const slides = items.map(item => `<div class="gallery-item">
 ${photo(item.file, item.alt, item.caption + ' का चित्र जोड़ा जाना बाकी है।',
-    {width:960, height:960, sizes:gallerySizes, caption:item.caption})}</div>`).join('')}</div>`;
+    {width:960, height:960, sizes:slider ? gallerySliderSizes : gallerySizes, caption:item.caption})}</div>`).join('');
+  return slider ? carousel('फोटो गैलरी', slides, 'gallery-carousel') : `<div class="gallery-grid">${slides}</div>`;
+};
 const posts = limit => {
   const entries = [...config.updates].sort((a, b) => String(b.date).localeCompare(String(a.date)));
   const placeholders = Array.from({length: limit || 1}, () =>
@@ -116,8 +126,11 @@ ${active ? '' : '<p class="hint">संदेश भेजने का सं�
 const hero = `<section class="hero wrap"><div class="hero-grid">
 <div class="hero-copy"><p class="eyebrow">${escape(config.place)}</p><h1>${escape(config.name)}</h1><p class="role">${escape(config.office)}</p>
 <p class="tagline">${escape(config.tagline)}</p><p class="hero-subtitle">${escape(config.subtitle)}</p></div>
-<div class="portrait">${photo(config.portrait, config.portraitAlt, 'नमस्ते करते हुए उम्मीदवार की तस्वीर यहाँ जोड़ी जाएगी।',
-  {width:1200, height:1500, sizes:heroSizes, eager:true, badge:config.portraitLabel})}</div>
+<div class="portrait">${carousel('प्रचार के चित्र',
+  photo(config.portrait, config.portraitAlt, 'नमस्ते करते हुए उम्मीदवार की तस्वीर यहाँ जोड़ी जाएगी।',
+    {width:1200, height:1500, sizes:heroSizes, eager:true}) +
+  photo(config.heroBanner, config.heroBannerAlt, 'अभियान पोस्टर जोड़ा जाना बाकी है।',
+    {width:800, height:1000}), 'hero-carousel')}</div>
 <div class="actions hero-actions">${button('मेरा संकल्प देखें', 'vision.html', 'gold')}${button('व्हाट्सऐप पर जुड़ें', waUrl)}</div>
 </div></section>`;
 const home = hero
@@ -127,7 +140,7 @@ const home = hero
   + section('विकास की रूपरेखा', timeline)
   + section('अमरगढ़ की ज़रूरतें', issues)
   + section('आँकड़े', facts, 'facts')
-  + section('गैलरी', gallery(config.gallery) + '<div class="actions">' + button('सभी फोटो देखें', 'gallery.html', 'light') + '</div>')
+  + section('गैलरी', gallery(config.gallery, true) + '<div class="actions">' + button('सभी फोटो देखें', 'gallery.html', 'light') + '</div>')
   + section('ताज़ा अपडेट', posts(3))
   + section('आपकी राय', '<h3>आपके गाँव की सबसे बड़ी समस्या क्या है?</h3>' + form('गाँव के लिए सुझाव', true))
   + appeal;
